@@ -11,6 +11,14 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  datasource:
+    url: "jdbc:mysql://localhost:3306/db-foodcourt"
+    username: "root"
+    password: "Ka55#27uTJ9s"
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+  jpa:
+    #databasePlatform: "org.hibernate.dialect.H2Dialect"
+    databasePlatform: org.hibernate.dialect.MySQLDialect
 management:
   endpoints:
     web:
@@ -28,24 +36,3 @@ cors:
 adapter:
   restconsumer:
     url: "http://localhost:8080"
-#resilience4j:
-#  circuitbreaker:
-#    instances:
-#      testGet:
-#        registerHealthIndicator: true
-#        failureRateThreshold: 50
-#        slowCallRateThreshold: 50
-#        slowCallDurationThreshold: "2s"
-#        permittedNumberOfCallsInHalfOpenState: 3
-#        slidingWindowSize: 10
-#        minimumNumberOfCalls: 10
-#        waitDurationInOpenState: "10s"
-#      testPost:
-#        registerHealthIndicator: true
-#        failureRateThreshold: 50
-#        slowCallRateThreshold: 50
-#        slowCallDurationThreshold: "2s"
-#        permittedNumberOfCallsInHalfOpenState: 3
-#        slidingWindowSize: 10
-#        minimumNumberOfCalls: 10
-#        waitDurationInOpenState: "10s"

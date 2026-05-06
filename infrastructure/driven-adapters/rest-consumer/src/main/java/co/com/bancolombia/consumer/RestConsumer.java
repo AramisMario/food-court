@@ -10,7 +10,7 @@ import co.com.bancolombia.model.owner.Owner;
 import co.com.bancolombia.model.owner.gateways.OwnerPort;
 import co.com.bancolombia.consumer.VerifyOwnerRequest;
 import co.com.bancolombia.consumer.VerifyOwnerResponse;
-import co.com.bancolombia.exceptions;
+import co.com.bancolombia.exceptions.UserNotOwnerException;
 @Service
 public class RestConsumer implements OwnerPort // implements Gateway from domain
 {
@@ -33,8 +33,8 @@ public class RestConsumer implements OwnerPort // implements Gateway from domain
                 .body(requestBody)
                 .retrieve()
                 .onStatus(status -> status == HttpStatus.UNPROCESSABLE_CONTENT, (req, res) -> {
-                    VerifyOwnerResponse error = res.body(new ParameterizedTypeReference<>() {
-                    });
+                    //VerifyOwnerResponse error = res.body(new ParameterizedTypeReference<>() {
+                    //});
 
                     System.out.println("HUBO ERROR, USUARIO NO ES OWNER");
 

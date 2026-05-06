@@ -56,7 +56,7 @@ public class ApiRest {
             apiResponse.setHttpStatus(HttpStatus.OK);
             apiResponse.setData(
                     new ApiResponseBody<Restaurant>("OK", "El usurio es Owner", restaurantResponse));
-        } catch (Error e) {
+        } catch (Exception e) {
 
             switch (e.getMessage()) {
                 case "USER_NOT_OWNER":
