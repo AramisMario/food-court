@@ -1,0 +1,110 @@
+package co.com.bancolombia.consumer;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.jupiter.api.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClient;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+
+class RestConsumerTest {
+
+    private static MockWebServer mockWebServer;
+    private static RestConsumer restConsumer;
+
+    @BeforeAll
+    static void setUp() throws IOException {
+        mockWebServer = new MockWebServer();
+        mockWebServer.start();
+
+        RestClient restClient = RestClient.builder()
+                .baseUrl(mockWebServer.url("/").toString())
+                .build();
+
+        restConsumer = new RestConsumer(restClient);
+    }
+
+    @AfterAll
+    static void tearDown() throws IOException {
+        mockWebServer.shutdown();
+    }
+
+    @Test
+    @DisplayName("Should successfully execute GET request and return ObjectResponse")
+    void testGetSuccess() throws Exception {
+        // Given
+        String jsonResponse = "{\"state\":\"success\"}";
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(jsonResponse)
+                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .setResponseCode(HttpStatus.OK.value()));
+
+        // When
+        ObjectResponse actualResponse = restConsumer.testGet();
+
+        // Then
+        assertNotNull(actualResponse);
+        assertEquals("success", actualResponse.getState());
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/list-users", recordedRequest.getPath());
+        assertEquals("example-value", recordedRequest.getHeader("HEADER-EXAMPLE"));
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, recordedRequest.getHeader(HttpHeaders.CONTENT_TYPE));
+    }
+
+    @Test
+    @DisplayName("Should handle GET request with empty response")
+    void testGetWithEmptyResponse() throws Exception {
+        // Given
+        mockWebServer.enqueue(new MockResponse()
+                .setBody("{}")
+                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .setResponseCode(HttpStatus.OK.value()));
+
+        // When
+        ObjectResponse actualResponse = restConsumer.testGet();
+
+        // Then
+        assertNotNull(actualResponse);
+        assertNull(actualResponse.getState());
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/list-users", recordedRequest.getPath());
+    }
+
+    @Test
+    @DisplayName("Should successfully execute POST request and return ObjectResponse")
+    void testPostSuccess() throws Exception {
+        // Given
+        String jsonResponse = "{\"state\":\"created\"}";
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(jsonResponse)
+                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .setResponseCode(HttpStatus.CREATED.value()));
+
+        // When
+        ObjectResponse actualResponse = restConsumer.testPost();
+
+        // Then
+        assertNotNull(actualResponse);
+        assertEquals("created", actualResponse.getState());
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertEquals("/create-user", recordedRequest.getPath());
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, recordedRequest.getHeader(HttpHeaders.CONTENT_TYPE));
+
+        String requestBody = recordedRequest.getBody().readUtf8();
+        assertTrue(requestBody.contains("exampleval1"));
+        assertTrue(requestBody.contains("exampleval2"));
+    }
+}

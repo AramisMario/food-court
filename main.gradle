@@ -21,7 +21,6 @@ subprojects {
         }
     }
 
-    //build.dependsOn 'pitest'
 
     test {
         useJUnitPlatform()
@@ -35,30 +34,11 @@ subprojects {
         testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
         testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
         implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
-        pitest "org.pitest:pitest-history-plugin:${pitestHistoryVersion}"
     }
 
 
     test.finalizedBy(project.tasks.jacocoTestReport)
 
-    pitest {
-        targetClasses = ['co.com.bancolombia.*']
-        excludedClasses = []
-        excludedTestClasses = []
-        pitestVersion = '1.23.0'
-        verbose = false
-        outputFormats = ['XML', 'HTML']
-        threads = 8
-        exportLineCoverage = true
-        useClasspathFile = true
-        withHistory = true
-        timestampedReports = false
-        //mutators = ['STRONGER', 'DEFAULTS']
-        fileExtensionsToFilter.addAll('xml', 'orbit')
-        junit5PluginVersion = '1.2.3'
-        failWhenNoMutations = false
-        jvmArgs = ["-XX:+AllowRedefinitionToAddDeleteMethods"]
-    }
 
     jacocoTestReport {
         dependsOn test, 'pitest'
