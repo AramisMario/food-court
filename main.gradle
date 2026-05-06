@@ -1,3 +1,4 @@
+apply plugin: 'info.solidsoft.pitest.aggregator'
 
 allprojects {
     repositories {
@@ -10,6 +11,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'jacoco'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'info.solidsoft.pitest'
 
     compileJava.dependsOn validateStructure
 
@@ -32,10 +34,31 @@ subprojects {
         testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
         testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
         implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+        pitest "org.pitest:pitest-history-plugin:${pitestHistoryVersion}"
     }
 
 
     test.finalizedBy(project.tasks.jacocoTestReport)
+
+
+    pitest {
+        targetClasses = ['co.com.bancolombia.*']
+        excludedClasses = []
+        excludedTestClasses = []
+        pitestVersion = '1.23.0'
+        verbose = false
+        outputFormats = ['XML', 'HTML']
+        threads = 8
+        exportLineCoverage = true
+        useClasspathFile = true
+        withHistory = true
+        timestampedReports = false
+        //mutators = ['STRONGER', 'DEFAULTS']
+        fileExtensionsToFilter.addAll('xml', 'orbit')
+        junit5PluginVersion = '1.2.3'
+        failWhenNoMutations = false
+        jvmArgs = ["-XX:+AllowRedefinitionToAddDeleteMethods"]
+    }
 
 
     jacocoTestReport {
@@ -74,7 +97,7 @@ tasks.withType(JavaCompile).configureEach {
     ]
 }
 
-tasks.register('pitestReportAggregate') {
+pitestReportAggregate {
     def rootReportDir = layout.buildDirectory.dir("reports/pitest")
     def subprojectReports = subprojects.collect { subproject ->
         subproject.layout.buildDirectory.file("reports/pitest/mutations.xml")
@@ -98,6 +121,32 @@ tasks.register('pitestReportAggregate') {
         }
     }
 }
+
+//tasks.register('pitestReportAggregate') {
+//    def rootReportDir = layout.buildDirectory.dir("reports/pitest")
+//    def subprojectReports = subprojects.collect { subproject ->
+//        subproject.layout.buildDirectory.file("reports/pitest/mutations.xml")
+//    }
+//
+//    doLast {
+//        def reportDir = rootReportDir.get().asFile
+//        def consolidatedReport = new File(reportDir, 'mutations.xml')
+//        consolidatedReport.withWriter { writer ->
+//            writer.write("<mutations>\n")
+//            subprojectReports.each { reportProvider ->
+//                def xmlReport = reportProvider.get().asFile
+//                if (xmlReport.exists()) {
+//                    def xmlContent = xmlReport.text
+//                    xmlContent = xmlContent.replaceAll("<\\?xml[^>]*>", "")
+//                    xmlContent = xmlContent.replaceAll("</?mutations( partial=\"true\")?>", "")
+//                    writer.write(xmlContent.trim() + "\n")
+//                }
+//            }
+//            writer.write("</mutations>")
+//        }
+//    }
+//}
+
 
 tasks.named('wrapper') {
     gradleVersion = '9.4.1'

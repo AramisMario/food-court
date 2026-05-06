@@ -53,9 +53,9 @@ public class ApiRest {
 
             Restaurant restaurantResponse = createRestaurantUsecase.execute(createRestaurantCommand);
 
-            apiResponse.setHttpStatus(HttpStatus.OK);
+            apiResponse.setHttpStatus(HttpStatus.CREATED);
             apiResponse.setData(
-                    new ApiResponseBody<Restaurant>("OK", "El usurio es Owner", restaurantResponse));
+                    new ApiResponseBody<Restaurant>("CREATED", "El usurio es Owner", restaurantResponse));
         } catch (Exception e) {
 
             switch (e.getMessage()) {

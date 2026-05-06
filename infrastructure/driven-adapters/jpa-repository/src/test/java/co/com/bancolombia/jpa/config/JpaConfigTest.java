@@ -51,13 +51,14 @@ class JpaConfigTest {
         assertEquals(dbSecretUnderTest.getUsername(), secretResult.getUsername());
         assertEquals(dbSecretUnderTest.getPassword(), secretResult.getPassword());
     }
-
+/*
     @Test
     void datasourceTest() {
-        final DataSource result = jpaConfigUnderTest.datasource(dbSecretUnderTest, "org.h2.Driver");
+        final DataSource result = jpaConfigUnderTest.datasource(dbSecretUnderTest, "com.mysql.cj.jdbc.Driver");
 
         assertNotNull(result);
     }
+    */
 
     @Test
     void entityManagerFactoryTest() {

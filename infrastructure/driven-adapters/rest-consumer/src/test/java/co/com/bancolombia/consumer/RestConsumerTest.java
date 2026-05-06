@@ -8,14 +8,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import co.com.bancolombia.consumer.VerifyOwnerResponse;
+import java.util.Map;
+import co.com.bancolombia.model.owner.Owner;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 class RestConsumerTest {
-
+    private static final ObjectMapper mapper = new ObjectMapper();
     private static MockWebServer mockWebServer;
     private static RestConsumer restConsumer;
 
@@ -37,74 +39,38 @@ class RestConsumerTest {
     }
 
     @Test
-    @DisplayName("Should successfully execute GET request and return ObjectResponse")
-    void testGetSuccess() throws Exception {
-        // Given
-        String jsonResponse = "{\"state\":\"success\"}";
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(jsonResponse)
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setResponseCode(HttpStatus.OK.value()));
-
-        // When
-        ObjectResponse actualResponse = restConsumer.testGet();
-
-        // Then
-        assertNotNull(actualResponse);
-        assertEquals("success", actualResponse.getState());
-
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/list-users", recordedRequest.getPath());
-        assertEquals("example-value", recordedRequest.getHeader("HEADER-EXAMPLE"));
-        assertEquals(MediaType.APPLICATION_JSON_VALUE, recordedRequest.getHeader(HttpHeaders.CONTENT_TYPE));
-    }
-
-    @Test
-    @DisplayName("Should handle GET request with empty response")
-    void testGetWithEmptyResponse() throws Exception {
-        // Given
-        mockWebServer.enqueue(new MockResponse()
-                .setBody("{}")
-                .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setResponseCode(HttpStatus.OK.value()));
-
-        // When
-        ObjectResponse actualResponse = restConsumer.testGet();
-
-        // Then
-        assertNotNull(actualResponse);
-        assertNull(actualResponse.getState());
-
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/list-users", recordedRequest.getPath());
-    }
-
-    @Test
     @DisplayName("Should successfully execute POST request and return ObjectResponse")
-    void testPostSuccess() throws Exception {
-        // Given
-        String jsonResponse = "{\"state\":\"created\"}";
+    void verifyOwner() throws Exception {
+
+        Owner owner = Owner.builder()
+                .id(57)
+                .email("mario@gmail.com")
+                .lastName("Diaz")
+                .name("Owner")
+                .phone("5732151323")
+                .birthDate("1997-07-12")
+                .identificationDocument("12345678").build();
+
+        VerifyOwnerResponse response = VerifyOwnerResponse.builder()
+                .code("OK")
+                .data(owner)
+                .message("el ususrio es Owner")
+                .build();
+
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonResponse = mapper.writeValueAsString(response);
+
         mockWebServer.enqueue(new MockResponse()
                 .setBody(jsonResponse)
                 .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setResponseCode(HttpStatus.CREATED.value()));
+                .setResponseCode(HttpStatus.OK.value()));
 
         // When
-        ObjectResponse actualResponse = restConsumer.testPost();
+        Owner actualResponse = restConsumer.verifyOwner(1);
 
         // Then
         assertNotNull(actualResponse);
-        assertEquals("created", actualResponse.getState());
-
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/create-user", recordedRequest.getPath());
-        assertEquals(MediaType.APPLICATION_JSON_VALUE, recordedRequest.getHeader(HttpHeaders.CONTENT_TYPE));
-
-        String requestBody = recordedRequest.getBody().readUtf8();
-        assertTrue(requestBody.contains("exampleval1"));
-        assertTrue(requestBody.contains("exampleval2"));
+        assertEquals("mario@gmail.com", actualResponse.getEmail());
+        assertEquals("Owner", actualResponse.getName());
     }
 }

@@ -3,6 +3,7 @@ import co.com.bancolombia.model.owner.gateways.OwnerPort;
 import co.com.bancolombia.model.restaurant.Restaurant;
 import co.com.bancolombia.model.restaurant.gateways.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
+import co.com.bancolombia.model.owner.Owner;
 @RequiredArgsConstructor
 public class CreateRestaurantUseCase {
 
@@ -12,7 +13,8 @@ public class CreateRestaurantUseCase {
 
     public Restaurant execute(CreateRestaurantCommand createRestaurantCommand){
         Restaurant restaurant = createRestaurantCommand.getRestaurant();
-        ownerPort.getOwner(restaurant.getOwnerId());
+        Owner owner = ownerPort.verifyOwner(restaurant.getOwnerId());
+        System.out.println("----------OWNER------: "+owner);
         Restaurant restaurantSaved = restaurantRepository.save(restaurant);
         return restaurantSaved;
     }

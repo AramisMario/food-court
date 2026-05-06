@@ -20,7 +20,7 @@ public class RestConsumer implements OwnerPort // implements Gateway from domain
         this.restClient = restClient;
     }
 
-    public Owner getOwner(int ownerId) {
+    public Owner verifyOwner(Integer ownerId) {
 
         System.out.println("SE HARA LA PETICION");
 
@@ -43,7 +43,7 @@ public class RestConsumer implements OwnerPort // implements Gateway from domain
                 .body(new ParameterizedTypeReference<VerifyOwnerResponse>() {
                 });
 
-        System.out.println("SE OBTUVO LA RESPUESTA");
+        System.out.println();
 
         Owner owner = Owner.builder()
                 .id(response.getData().getId())

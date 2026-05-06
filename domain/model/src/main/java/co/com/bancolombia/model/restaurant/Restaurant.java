@@ -12,6 +12,7 @@ import lombok.Setter;
 @Builder(toBuilder = true)
 public class Restaurant {
 
+    private Integer id;
     private String name;
     private String taxIdentification;
     private String addres;
