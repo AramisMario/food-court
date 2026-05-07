@@ -18,6 +18,11 @@ import co.com.bancolombia.usecase.createdish.CreateDishCommand;
 import co.com.bancolombia.usecase.createdish.CreateDishUseCase;
 import co.com.bancolombia.usecase.createrestaurant.CreateRestaurantCommand;
 import co.com.bancolombia.usecase.createrestaurant.CreateRestaurantUseCase;
+import co.com.bancolombia.usecase.updateDish.UpdateDishCommand;
+import co.com.bancolombia.usecase.updateDish.UpdateDishUseCase;
+
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * API Rest controller.
@@ -39,6 +44,7 @@ public class ApiRest {
 
     private final CreateRestaurantUseCase createRestaurantUsecase;
     private final CreateDishUseCase createDishUseCase;
+    private final UpdateDishUseCase updateDishUseCase;
 
     @PostMapping(path = "/createrestaurant/path")
     public ResponseEntity<ApiResponseBody<Restaurant>> createRestauran(
@@ -139,5 +145,43 @@ public class ApiRest {
 
         return apiResponse.response();
 
+    }
+
+    @PutMapping(path = "/updatedish/path/{id}")
+    public ResponseEntity<ApiResponseBody<Dish>> updateDish(@PathVariable("id") Integer id, @RequestBody DishDTO dishDTO) {
+        System.out.println("AQUI DENTRO DEL METODO-------------------------------");
+        ApiResponse<Dish> apiResponse = new ApiResponse<>();
+
+        try {
+
+            Dish dish = Dish.builder()
+                    .name(dishDTO.getName())
+                    .price(dishDTO.getPrice())
+                    .category(dishDTO.getCategory())
+                    .description(dishDTO.getDescription())
+                    .urlImage(dishDTO.getUrlImage())
+                    .build();
+
+            UpdateDishCommand updateDishCommand = UpdateDishCommand.builder().dishId(id).dish(dish).build();
+
+            Dish updatedDish = updateDishUseCase.execute(updateDishCommand);
+
+            apiResponse.setHttpStatus(HttpStatus.OK);
+            apiResponse.setData(
+                    new ApiResponseBody<Dish>("OK", "Plato actualizado", updatedDish));
+        } catch (Exception e) {
+            switch (e.getMessage()) {
+
+                default:
+
+                    apiResponse.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+                    apiResponse.setData(
+                            new ApiResponseBody<Dish>("INTERNAL_SERVER_ERROR", "Error interno del servidor",
+                                    null));
+                    break;
+            }
+        }
+
+        return apiResponse.response();
     }
 }
