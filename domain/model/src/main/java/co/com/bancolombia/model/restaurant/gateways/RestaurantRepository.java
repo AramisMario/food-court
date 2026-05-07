@@ -4,4 +4,5 @@ import co.com.bancolombia.model.restaurant.Restaurant;
 
 public interface RestaurantRepository {
     Restaurant save(Restaurant restaurant);
+    Restaurant findById(Integer restaurantId);
 }

@@ -1,7 +1,9 @@
 package co.com.bancolombia.api;
 
 import jakarta.validation.Valid;
+import co.com.bancolombia.dto.DishDTO;
 import lombok.RequiredArgsConstructor;
+import co.com.bancolombia.model.dish.Dish;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import co.com.bancolombia.dto.RestaurantDTO;
@@ -11,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import co.com.bancolombia.usecase.createdish.CreateDishUseCase;
+import co.com.bancolombia.usecase.createdish.CreateDishCommand;
+import co.com.bancolombia.usecase.createdish.CreateDishUseCase;
 import co.com.bancolombia.usecase.createrestaurant.CreateRestaurantCommand;
 import co.com.bancolombia.usecase.createrestaurant.CreateRestaurantUseCase;
 
@@ -33,9 +38,11 @@ import co.com.bancolombia.usecase.createrestaurant.CreateRestaurantUseCase;
 public class ApiRest {
 
     private final CreateRestaurantUseCase createRestaurantUsecase;
+    private final CreateDishUseCase createDishUseCase;
 
     @PostMapping(path = "/createrestaurant/path")
-    public ResponseEntity<ApiResponseBody<Restaurant>> createRestauran(@Valid @RequestBody RestaurantDTO restaurantDTO) {
+    public ResponseEntity<ApiResponseBody<Restaurant>> createRestauran(
+            @Valid @RequestBody RestaurantDTO restaurantDTO) {
 
         ApiResponse<Restaurant> apiResponse = new ApiResponse<>();
 
@@ -71,7 +78,8 @@ public class ApiRest {
 
                     apiResponse.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
                     apiResponse.setData(
-                            new ApiResponseBody<Restaurant>("INTERNAL_SERVER_ERROR", "Error interno del servidor", null));
+                            new ApiResponseBody<Restaurant>("INTERNAL_SERVER_ERROR", "Error interno del servidor",
+                                    null));
 
                     break;
             }
@@ -81,4 +89,55 @@ public class ApiRest {
         return apiResponse.response();
     }
 
+    @PostMapping(path = "/createdish/path")
+    public ResponseEntity<ApiResponseBody<Dish>> createRestauran(@Valid @RequestBody DishDTO dishDTO) {
+        ApiResponse<Dish> apiResponse = new ApiResponse<>();
+
+        try {
+
+            Dish dish = Dish.builder()
+                    .name(dishDTO.getName())
+                    .price(dishDTO.getPrice())
+                    .category(dishDTO.getCategory())
+                    .description(dishDTO.getDescription())
+                    .urlImage(dishDTO.getUrlImage())
+                    .build();
+
+            CreateDishCommand createDishCommand = CreateDishCommand.builder()
+                    .dish(dish)
+                    .restaurantId(dishDTO.getRestaurantId())
+                    .ownerId(dishDTO.getOwnerId())
+                    .build();
+
+            Dish createdDish = createDishUseCase.execute(createDishCommand);
+
+            apiResponse.setHttpStatus(HttpStatus.CREATED);
+            apiResponse.setData(
+                    new ApiResponseBody<Dish>("CREATED", "Plato creado", createdDish));
+
+        } catch (Exception e) {
+
+            switch (e.getMessage()) {
+
+                case "USER_NOT_OWN_RESTAURANT":
+
+                    apiResponse.setHttpStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+                    apiResponse.setData(new ApiResponseBody<Dish>("UNPROCESSABLE_CONTENT",
+                            "El usuario no es propietario de ese restaurante", null));
+                    break;
+
+                default:
+
+                    apiResponse.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+                    apiResponse.setData(
+                            new ApiResponseBody<Dish>("INTERNAL_SERVER_ERROR", "Error interno del servidor",
+                                    null));
+
+                    break;
+            }
+        }
+
+        return apiResponse.response();
+
+    }
 }

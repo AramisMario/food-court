@@ -18,5 +18,5 @@ public class Restaurant {
     private String addres;
     private String phone;
     private String urlLogo;
-    private int ownerId;
+    private Integer ownerId;
 }

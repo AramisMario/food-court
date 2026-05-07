@@ -12,12 +12,11 @@ spring:
   profiles:
     include: null
   datasource:
-    url: "jdbc:mysql://localhost:3306/db-foodcourt"
+    url: "jdbc:mysql://localhost:3306/db-foodCourt"
     username: "root"
     password: "Ka55#27uTJ9s"
     driverClassName: "com.mysql.cj.jdbc.Driver"
   jpa:
-    #databasePlatform: "org.hibernate.dialect.H2Dialect"
     databasePlatform: org.hibernate.dialect.MySQLDialect
 management:
   endpoints:

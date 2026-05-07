@@ -1,4 +1,4 @@
-package co.com.bancolombia.jpa.restaurant;
+package co.com.bancolombia.jpa.restaurant.restaurantEntity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
