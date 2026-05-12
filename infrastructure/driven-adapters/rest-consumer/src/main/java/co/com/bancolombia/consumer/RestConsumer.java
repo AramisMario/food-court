@@ -11,6 +11,7 @@ import co.com.bancolombia.model.owner.gateways.OwnerPort;
 import co.com.bancolombia.consumer.VerifyOwnerRequest;
 import co.com.bancolombia.consumer.VerifyOwnerResponse;
 import co.com.bancolombia.exceptions.UserNotOwnerException;
+import co.com.bancolombia.api.helpers.Headers;
 @Service
 public class RestConsumer implements OwnerPort // implements Gateway from domain
 {
@@ -22,7 +23,9 @@ public class RestConsumer implements OwnerPort // implements Gateway from domain
 
     public Owner verifyOwner(Integer ownerId) {
 
+        Headers headers = Headers.getInstance();
         System.out.println("SE HARA LA PETICION");
+        System.out.println("EL HEADER OBTENIDO: "+headers.getToken());
 
         VerifyOwnerRequest requestBody = VerifyOwnerRequest.builder().userId(ownerId).build();
 
@@ -30,6 +33,7 @@ public class RestConsumer implements OwnerPort // implements Gateway from domain
                 .post()
                 .uri("/api/verifyowner/path")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", headers.getToken())
                 .body(requestBody)
                 .retrieve()
                 .onStatus(status -> status == HttpStatus.UNPROCESSABLE_CONTENT, (req, res) -> {

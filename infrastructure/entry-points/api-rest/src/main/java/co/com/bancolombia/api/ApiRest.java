@@ -1,10 +1,12 @@
 package co.com.bancolombia.api;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import co.com.bancolombia.dto.DishDTO;
 import lombok.RequiredArgsConstructor;
 import co.com.bancolombia.model.dish.Dish;
 import org.springframework.http.MediaType;
+import org.osgi.annotation.bundle.Header;
 import org.springframework.http.HttpStatus;
 import co.com.bancolombia.dto.RestaurantDTO;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +22,10 @@ import co.com.bancolombia.usecase.createrestaurant.CreateRestaurantCommand;
 import co.com.bancolombia.usecase.createrestaurant.CreateRestaurantUseCase;
 import co.com.bancolombia.usecase.updateDish.UpdateDishCommand;
 import co.com.bancolombia.usecase.updateDish.UpdateDishUseCase;
-
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import co.com.bancolombia.api.helpers.Headers;
+import co.com.bancolombia.api.services.JwtService;
 
 /**
  * API Rest controller.
@@ -45,13 +48,17 @@ public class ApiRest {
     private final CreateRestaurantUseCase createRestaurantUsecase;
     private final CreateDishUseCase createDishUseCase;
     private final UpdateDishUseCase updateDishUseCase;
+    private final JwtService jwtService;
 
     @PostMapping(path = "/createrestaurant/path")
     public ResponseEntity<ApiResponseBody<Restaurant>> createRestauran(
-            @Valid @RequestBody RestaurantDTO restaurantDTO) {
+            @Valid @RequestBody RestaurantDTO restaurantDTO, HttpServletRequest request) {
 
         ApiResponse<Restaurant> apiResponse = new ApiResponse<>();
-
+        String authHeader = request.getHeader("Authorization");
+        Headers headers = Headers.getInstance();
+        headers.setToken(authHeader);
+        String autenticatedUserRoleName = jwtService.extractClaim(authHeader.substring(7), "role", String.class);
         try {
             Restaurant restaurant = Restaurant.builder()
                     .name(restaurantDTO.getName())
@@ -62,7 +69,8 @@ public class ApiRest {
                     .ownerId(restaurantDTO.getOwnerId())
                     .build();
 
-            CreateRestaurantCommand createRestaurantCommand = new CreateRestaurantCommand(restaurant);
+            CreateRestaurantCommand createRestaurantCommand = new CreateRestaurantCommand(restaurant,
+                    autenticatedUserRoleName);
 
             Restaurant restaurantResponse = createRestaurantUsecase.execute(createRestaurantCommand);
 
@@ -84,7 +92,7 @@ public class ApiRest {
 
                     apiResponse.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
                     apiResponse.setData(
-                            new ApiResponseBody<Restaurant>("INTERNAL_SERVER_ERROR", "Error interno del servidor",
+                            new ApiResponseBody<Restaurant>("INTERNAL_SERVER_ERROR", e.getMessage(),
                                     null));
 
                     break;
@@ -96,8 +104,14 @@ public class ApiRest {
     }
 
     @PostMapping(path = "/createdish/path")
-    public ResponseEntity<ApiResponseBody<Dish>> createRestauran(@Valid @RequestBody DishDTO dishDTO) {
+    public ResponseEntity<ApiResponseBody<Dish>> createRestauran(@Valid @RequestBody DishDTO dishDTO,
+            HttpServletRequest request) {
         ApiResponse<Dish> apiResponse = new ApiResponse<>();
+
+        String authHeader = request.getHeader("Authorization");
+        Headers headers = Headers.getInstance();
+        headers.setToken(authHeader);
+        String autenticatedUserRoleName = jwtService.extractClaim(authHeader.substring(7), "role", String.class);
 
         try {
 
@@ -113,6 +127,7 @@ public class ApiRest {
                     .dish(dish)
                     .restaurantId(dishDTO.getRestaurantId())
                     .ownerId(dishDTO.getOwnerId())
+                    .userAuthenticatedRole(autenticatedUserRoleName)
                     .build();
 
             Dish createdDish = createDishUseCase.execute(createDishCommand);
@@ -148,10 +163,17 @@ public class ApiRest {
     }
 
     @PutMapping(path = "/updatedish/path/{id}")
-    public ResponseEntity<ApiResponseBody<Dish>> updateDish(@PathVariable("id") Integer id, @RequestBody DishDTO dishDTO) {
-        System.out.println("AQUI DENTRO DEL METODO-------------------------------");
+    public ResponseEntity<ApiResponseBody<Dish>> updateDish(@PathVariable("id") Integer id,
+            @RequestBody DishDTO dishDTO, HttpServletRequest request) {
+
         ApiResponse<Dish> apiResponse = new ApiResponse<>();
 
+        String authHeader = request.getHeader("Authorization");
+        Headers headers = Headers.getInstance();
+        headers.setToken(authHeader);
+        String token = authHeader.substring(7);
+        String autenticatedUserRoleName = jwtService.extractClaim(token, "role", String.class);
+        Integer ownerId = Integer.parseInt(jwtService.extractUserId(token));
         try {
 
             Dish dish = Dish.builder()
@@ -160,9 +182,15 @@ public class ApiRest {
                     .category(dishDTO.getCategory())
                     .description(dishDTO.getDescription())
                     .urlImage(dishDTO.getUrlImage())
+                    .active(dishDTO.getActive())
                     .build();
 
-            UpdateDishCommand updateDishCommand = UpdateDishCommand.builder().dishId(id).dish(dish).build();
+            UpdateDishCommand updateDishCommand = UpdateDishCommand.builder()
+                    .dishId(id)
+                    .dish(dish)
+                    .userAuthenticatedRole(autenticatedUserRoleName)
+                    .ownerId(ownerId)
+                    .build();
 
             Dish updatedDish = updateDishUseCase.execute(updateDishCommand);
 
@@ -176,7 +204,7 @@ public class ApiRest {
 
                     apiResponse.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
                     apiResponse.setData(
-                            new ApiResponseBody<Dish>("INTERNAL_SERVER_ERROR", "Error interno del servidor",
+                            new ApiResponseBody<Dish>("INTERNAL_SERVER_ERROR", e.getMessage(),
                                     null));
                     break;
             }

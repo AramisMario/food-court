@@ -1,5 +1,7 @@
 package co.com.bancolombia.usecase.createdish;
 
+import java.util.List;
+
 import co.com.bancolombia.exceptions.UserNotOwnRestaurantException;
 import co.com.bancolombia.model.dish.Dish;
 import co.com.bancolombia.model.restaurant.gateways.RestaurantRepository;
@@ -15,10 +17,17 @@ public class CreateDishUseCase {
     private final DishRepository dishRepository;
 
     public Dish execute(CreateDishCommand createDishCommand) {
+
+        List<String> createpermission = List.of("Owner");
+
+        if (!createpermission.contains(createDishCommand.getUserAuthenticatedRole())) {
+            throw new RuntimeException(
+                    "EL USUARIO NO TIENE PERMISOS PARA CREAR PLATOS POR QUE NO ES OWNER");
+        }
+
         Dish dish = createDishCommand.getDish();
         Integer ownerId = createDishCommand.getOwnerId();
-        // Owner owner = ownerPort.verifyOwner(restaurant.getOwnerId());
-        // System.out.println("----------OWNER------: "+owner);
+
         Restaurant restaurant = restaurantRepository.findById(createDishCommand.getRestaurantId());
         if (restaurant == null) {
             throw new RuntimeException("no existe el restaurante");
@@ -28,7 +37,7 @@ public class CreateDishUseCase {
         }
 
         dish.setRestaurant(restaurant);
-        Dish createdDish =dishRepository.save(dish);
+        Dish createdDish = dishRepository.save(dish);
 
         return createdDish;
     }

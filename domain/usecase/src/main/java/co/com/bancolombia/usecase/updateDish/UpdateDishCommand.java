@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,4 +14,6 @@ import lombok.AllArgsConstructor;
 public class UpdateDishCommand {
     private Integer dishId;
     private Dish dish;
+    private String userAuthenticatedRole;
+    private Integer ownerId;
 }

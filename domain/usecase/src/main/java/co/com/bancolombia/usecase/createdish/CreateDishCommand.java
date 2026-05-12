@@ -14,4 +14,5 @@ public class CreateDishCommand{
     private Dish dish;
     private Integer restaurantId;
     private Integer ownerId;
+    private String userAuthenticatedRole;
 }
